@@ -1,9 +1,9 @@
 import os
-from openai import OpenAI
+from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def evaluate_relevance(query, context_chunks):
     """
@@ -25,13 +25,13 @@ def evaluate_relevance(query, context_chunks):
     """
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini", # Use a fast, cheap model for routing
+        model="llama-3.1-8b-instant",  # Updated to a supported model
         messages=[{"role": "user", "content": prompt}],
         temperature=0
     )
     
     output = response.choices[0].message.content.strip().split('\n')
-    is_relevant = output[0].split(":")[1].strip()
-    new_query = output[1].split(":")[1].strip() if len(output) > 1 else ""
+    is_relevant = "YES" in output[0].upper()
+    new_query = output[1].split(":")[1].strip() if len(output) > 1 and ":" in output[1] else ""
 
-    return {"is_relevant": is_relevant == "YES", "new_query": new_query}
+    return {"is_relevant": is_relevant, "new_query": new_query}

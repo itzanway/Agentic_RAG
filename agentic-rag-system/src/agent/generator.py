@@ -1,6 +1,18 @@
-from openai import OpenAI
+import os
+from groq import Groq
+from dotenv import load_dotenv
 
-client = OpenAI() # Assumes api key is in env
+
+# Load environment variables from .env
+load_dotenv()
+
+# Get the GROQ API key from environment
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY not set in environment or .env file.")
+
+# Initialize Groq client with the API key
+client = Groq(api_key=GROQ_API_KEY)
 
 def generate_answer(query, context_chunks):
     context_text = "\n\n".join([f"Source {i+1}:\n{chunk}" for i, chunk in enumerate(context_chunks)])
@@ -16,9 +28,8 @@ def generate_answer(query, context_chunks):
     """
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="llama-3.1-8b-instant",  # Updated to a supported model
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2
     )
-    
     return response.choices[0].message.content

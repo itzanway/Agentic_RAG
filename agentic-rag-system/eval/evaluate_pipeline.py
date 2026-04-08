@@ -1,6 +1,6 @@
 import os
 import json
-from openai import OpenAI
+from groq import Groq
 from dotenv import load_dotenv
 
 # Import your pipeline modules
@@ -11,7 +11,9 @@ from src.retrieval import DenseRetriever, SparseRetriever, Reranker
 from src.agent import generate_answer
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# UPDATE 1: Swap OpenAI for Groq
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def evaluate_with_llm(query, context, final_answer):
     """
@@ -35,13 +37,13 @@ def evaluate_with_llm(query, context, final_answer):
     {{"faithfulness": score, "relevance": score, "reasoning": "Brief explanation"}}
     """
 
+    # UPDATE 2: Use a free, fast open-source model like Llama 3
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="llama-3.1-8b-instant",  # Updated to a supported model
         messages=[{"role": "user", "content": prompt}],
         temperature=0.0,
         response_format={ "type": "json_object" }
     )
-    
     return json.loads(response.choices[0].message.content)
 
 def main():
