@@ -1,10 +1,4 @@
-# Environments
-venv/
 .env
-
-# Python cache
+venv/
 __pycache__/
 *.pyc
-
-# Vector DB local storage
-data/vector_db/
