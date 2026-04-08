@@ -1,9 +1,13 @@
-from src.ingestion.chunker import sliding_window_chunker
-from src.retrieval.dense_search import DenseRetriever
-from src.retrieval.sparse_search import SparseRetriever
-from src.retrieval.reranker import Reranker
-from src.agent.router import evaluate_relevance
-from src.agent.generator import generate_answer
+import os
+from dotenv import load_dotenv
+
+# Load environment variables (like OPENAI_API_KEY) right at the start
+load_dotenv()
+
+# Notice how clean these imports are now thanks to your __init__.py files!
+from src.ingestion import sliding_window_chunker
+from src.retrieval import DenseRetriever, SparseRetriever, Reranker
+from src.agent import evaluate_relevance, generate_answer
 
 def main():
     # 1. Setup mock data (replace with parsing your PDFs)
@@ -13,6 +17,8 @@ def main():
         "Server architecture relies on AWS EC2 instances and an RDS PostgreSQL database.",
         "Employee policy states that vacation days do not roll over into the next calendar year."
     ]
+    
+    # Chunk the text
     chunks = sliding_window_chunker(mock_text, chunk_size=20)
     
     # 2. Initialize and populate retrieval systems
@@ -21,6 +27,7 @@ def main():
     sparse_db = SparseRetriever()
     reranker = Reranker()
     
+    # Ingest chunks into both Dense (Vector) and Sparse (BM25) systems
     dense_db.ingest(chunks)
     sparse_db.ingest(chunks)
     
@@ -34,14 +41,14 @@ def main():
     for attempt in range(max_retries):
         print(f"\nAttempt {attempt + 1}: Searching for '{current_query}'")
         
-        # Hybrid Search
+        # Run parallel Hybrid Search
         dense_results = dense_db.search(current_query, top_k=5)
         sparse_results = sparse_db.search(current_query, top_k=5)
         
-        # Rerank
+        # Cross-Encoder Rerank
         best_chunks = reranker.fuse_and_rerank(current_query, dense_results, sparse_results, top_k=2)
         
-        # Self-Reflection
+        # Agentic Routing / Self-Reflection
         print("Agent evaluating context relevance...")
         evaluation = evaluate_relevance(current_query, best_chunks)
         
