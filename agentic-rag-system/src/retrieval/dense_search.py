@@ -29,9 +29,13 @@ class DenseRetriever:
 
     def search(self, query, top_k=20):
         query_vector = self.encoder.encode(query).tolist()
-        results = self.client.search(
+        
+        # FIX: Use query_points instead of search for the new Qdrant API
+        response = self.client.query_points(
             collection_name=self.collection_name,
-            query_vector=query_vector,
+            query=query_vector, # Note: parameter is now 'query' instead of 'query_vector'
             limit=top_k
         )
-        return [{"text": res.payload["text"], "score": res.score, "id": res.id} for res in results]
+        
+        # FIX: Loop through response.points instead of results directly
+        return [{"text": res.payload["text"], "score": res.score, "id": res.id} for res in response.points]
